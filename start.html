@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>NeoPhone Study — Redirecting…</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; 
+           display:flex;align-items:center;justify-content:center;height:100vh;margin:0;
+           background:#f7f9fc;color:#0b2545; }
+    .card { text-align:center; padding:28px; border-radius:12px; box-shadow:0 8px 30px rgba(15,23,42,0.08); max-width:560px; }
+    a.button { display:inline-block; margin-top:14px; padding:10px 18px; border-radius:8px; background:#0073e6; color:white; text-decoration:none; font-weight:600; }
+    small { color:#556; display:block; margin-top:10px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>NeoPhone Study</h2>
+    <p>We will now take you to a short chatbot interaction. After viewing you will be asked to complete a brief survey.</p>
+    <p style="margin-top:6px">Redirecting you now — if the page does not redirect, click <a id="manual" class="button" href="#">here</a>.</p>
+    <small>If you have issues, try refreshing or use a different browser.</small>
+  </div>
+
+<script>
+  // CONFIG
+  const nConditions = 8;
+  const conditionPrefix = 'https://www.neophone.in/condition'; // e.g. /condition1
+  const LOG_ENDPOINT = 'https://neophone.in/.netlify/functions/logAssignment'; // <- Paste the Apps Script web app URL here
+
+  // utility: generate participantID and clientId
+  function genParticipantID() {
+    // human-readable unique id: NP-YYYYMMDD-HHMMSS-xxxx
+    const now = new Date();
+    const ts = now.getFullYear().toString()
+             + ('0'+(now.getMonth()+1)).slice(-2)
+             + ('0'+now.getDate()).slice(-2)
+             + '-'
+             + ('0'+now.getHours()).slice(-2)
+             + ('0'+now.getMinutes()).slice(-2)
+             + ('0'+now.getSeconds()).slice(-2);
+    const rand = Math.random().toString(36).slice(2,7).toUpperCase();
+    return `NP-${ts}-${rand}`;
+  }
+  function genClientId() {
+    return Math.random().toString(36).slice(2,10);
+  }
+
+  function sendLogThenRedirect(n, participantID, clientId) {
+    const url = conditionPrefix + n + `?participantID=${encodeURIComponent(participantID)}&clientId=${encodeURIComponent(clientId)}`;
+    document.getElementById('manual').href = url;
+
+    const payload = {
+      participantID: participantID,
+      clientId: clientId,
+      condition: n,
+      referrer: document.referrer || '',
+      userAgent: navigator.userAgent || '',
+      extra: {host: location.hostname}
+    };
+
+    if (LOG_ENDPOINT && LOG_ENDPOINT !== 'https://neophone.in/.netlify/functions/logAssignment') {
+      try {
+        const blob = new Blob([JSON.stringify(payload)], {type: 'application/json'});
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(LOG_ENDPOINT, blob);
+          // small delay to help beacon be delivered
+          setTimeout(()=> window.location.replace(url), 250);
+          return;
+        } else {
+          fetch(LOG_ENDPOINT, {method:'POST', body: JSON.stringify(payload), headers:{'Content-Type':'application/json'}})
+            .catch(()=>{})
+            .finally(()=> setTimeout(()=> window.location.replace(url), 250));
+          return;
+        }
+      } catch (e) {
+        // fallback to redirect if logging fails
+        window.location.replace(url);
+        return;
+      }
+    } else {
+      // no logging endpoint set: just redirect
+      window.location.replace(url);
+    }
+  }
+
+  function pickAndGo() {
+    const n = Math.floor(Math.random()*nConditions) + 1; // 1..nConditions
+    const pid = genParticipantID();
+    const cid = genClientId();
+    sendLogThenRedirect(n, pid, cid);
+  }
+
+  setTimeout(pickAndGo, 300);
+</script>
+</body>
+</html>
