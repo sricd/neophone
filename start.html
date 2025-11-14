@@ -22,89 +22,114 @@
   </div>
 
   <script>
-    /* Single-send logging: sendBeacon preferred; fetch used only as fallback */
+    /* start.html — client-side assignment persistence + robust logging */
     const nConditions = 8;
     const conditionPrefix = 'https://neophone.in/condition';
     const LOG_ENDPOINT = 'https://neophone.in/.netlify/functions/logAssignment';
     
+    // TTL for client-side stored assignment (ms). e.g., 30 minutes
+    const ASSIGNMENT_TTL_MS = 30 * 60 * 1000; // 30 minutes
+    
+    function now() { return Date.now(); }
     function genParticipantID() {
-      const now = new Date();
-      const ts = now.getFullYear().toString()
-                 + ('0'+(now.getMonth()+1)).slice(-2)
-                 + ('0'+now.getDate()).slice(-2)
-                 + '-'
-                 + ('0'+now.getHours()).slice(-2)
-                 + ('0'+now.getMinutes()).slice(-2)
-                 + ('0'+now.getSeconds()).slice(-2);
+      const d = new Date();
+      const ts = d.getFullYear().toString()
+               + ('0'+(d.getMonth()+1)).slice(-2)
+               + ('0'+d.getDate()).slice(-2) + '-'
+               + ('0'+d.getHours()).slice(-2)
+               + ('0'+d.getMinutes()).slice(-2)
+               + ('0'+d.getSeconds()).slice(-2);
       const rand = Math.random().toString(36).slice(2,7).toUpperCase();
       return `NP-${ts}-${rand}`;
     }
-    function genClientId() {
-      return Math.random().toString(36).slice(2,10);
+    function genClientId() { return Math.random().toString(36).slice(2,10); }
+    
+    function getStoredAssignment() {
+      try {
+        const raw = localStorage.getItem('neo_assignment');
+        if (!raw) return null;
+        const obj = JSON.parse(raw);
+        if (!obj.participantID || !obj.condition || !obj.timestamp) return null;
+        if (now() - obj.timestamp > ASSIGNMENT_TTL_MS) {
+          localStorage.removeItem('neo_assignment');
+          return null;
+        }
+        return obj;
+      } catch (e) {
+        return null;
+      }
+    }
+    
+    function storeAssignment(participantID, clientId, condition) {
+      const obj = { participantID, clientId, condition, timestamp: now() };
+      try { localStorage.setItem('neo_assignment', JSON.stringify(obj)); } catch(e) {}
     }
     
     async function attemptLogOnce(payload) {
-      // prefer navigator.sendBeacon
+      // prefer sendBeacon, fallback to fetch (only if beacon not available)
       try {
         if (navigator.sendBeacon) {
-          const blob = new Blob([JSON.stringify(payload)], {type: 'application/json'});
-          const beaconOk = navigator.sendBeacon(LOG_ENDPOINT, blob);
-          if (beaconOk) {
-            console.log('LOG: sendBeacon queued (no fallback).');
-            return {sentBy: 'beacon'};
-          }
-          console.warn('LOG: sendBeacon returned false.');
-        } else {
-          console.warn('LOG: sendBeacon not available in this browser.');
+          const blob = new Blob([JSON.stringify(payload)], {type:'application/json'});
+          const ok = navigator.sendBeacon(LOG_ENDPOINT, blob);
+          if (ok) return { sentBy: 'beacon' };
         }
-      } catch (e) {
-        console.warn('LOG: sendBeacon threw', e);
-      }
-    
-      // fallback: use fetch with keepalive (same-origin avoids CORS preflight)
+      } catch(e) { /* continue to fallback */ }
       try {
-        const resp = await fetch(LOG_ENDPOINT, {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
+        const r = await fetch(LOG_ENDPOINT, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
           body: JSON.stringify(payload),
           keepalive: true
         });
-        console.log('LOG: fetch fallback status', resp.status);
-        return {sentBy: 'fetch', status: resp.status};
-      } catch (err) {
-        console.warn('LOG: fetch fallback error', err);
-        return {sentBy: 'none', error: err};
+        return { sentBy: 'fetch', status: r.status };
+      } catch(err) {
+        return { sentBy: 'none', error: String(err) };
       }
     }
     
-    function sendLogThenRedirect(n, participantID, clientId) {
-      const url = conditionPrefix + n + `?participantID=${encodeURIComponent(participantID)}&clientId=${encodeURIComponent(clientId)}`;
+    async function assignOrReuseAndGo() {
+      // If stored assignment exists and still valid, reuse it:
+      const stored = getStoredAssignment();
+      if (stored) {
+        // redirect immediately to stored condition
+        const url = `${conditionPrefix}${stored.condition}?participantID=${encodeURIComponent(stored.participantID)}&clientId=${encodeURIComponent(stored.clientId)}`;
+        // set manual fallback link if present
+        const manual = document.getElementById('manual'); if (manual) manual.href = url;
+        window.location.replace(url);
+        return;
+      }
+    
+      // otherwise create a new assignment
+      const n = Math.floor(Math.random()*nConditions) + 1;
+      const participantID = genParticipantID();
+      const clientId = genClientId();
+    
+      // store immediately to avoid race if user navigates quickly
+      storeAssignment(participantID, clientId, n);
+    
+      // build payload and log (try sendBeacon -> fetch fallback)
       const payload = {
-        participantID,
-        clientId,
-        condition: n,
+        participantID, clientId, condition: n,
         referrer: document.referrer || '',
         userAgent: navigator.userAgent || '',
-        extra: {host: location.hostname}
+        extra: { host: location.hostname }
       };
     
-      // Attempt to send, then redirect after a short delay to allow delivery
+      // Attempt logging but do not block too long — still wait a short while then redirect
       attemptLogOnce(payload).finally(() => {
-        // give a short extra pause to improve reliability across browsers
-        setTimeout(() => { window.location.replace(url); }, 600);
+        // keep small pause to increase delivery success
+        setTimeout(() => {
+          const url = `${conditionPrefix}${n}?participantID=${encodeURIComponent(participantID)}&clientId=${encodeURIComponent(clientId)}`;
+          const manual = document.getElementById('manual'); if (manual) manual.href = url;
+          window.location.replace(url);
+        }, 600);
       });
     }
     
-    function pickAndGo() {
-      const n = Math.floor(Math.random()*nConditions) + 1;
-      const pid = genParticipantID();
-      const cid = genClientId();
-      console.log('DEBUG: selected', n, pid, cid);
-      sendLogThenRedirect(n, pid, cid);
-    }
-    
-    setTimeout(pickAndGo, 300);
+    // small visual UI assume exists — then run
+    setTimeout(assignOrReuseAndGo, 250);
     </script>
+    
     
     
 </body>
