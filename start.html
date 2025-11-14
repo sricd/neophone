@@ -21,76 +21,96 @@
     <small>If you have issues, try refreshing or use a different browser.</small>
   </div>
 
-<script>
-  // CONFIG
-  const nConditions = 8;
-  const conditionPrefix = 'https://www.neophone.in/condition'; // e.g. /condition1
-  const LOG_ENDPOINT = 'https://neophone.in/.netlify/functions/logAssignment'; // <- Paste the Apps Script web app URL here
-
-  // utility: generate participantID and clientId
-  function genParticipantID() {
-    // human-readable unique id: NP-YYYYMMDD-HHMMSS-xxxx
-    const now = new Date();
-    const ts = now.getFullYear().toString()
-             + ('0'+(now.getMonth()+1)).slice(-2)
-             + ('0'+now.getDate()).slice(-2)
-             + '-'
-             + ('0'+now.getHours()).slice(-2)
-             + ('0'+now.getMinutes()).slice(-2)
-             + ('0'+now.getSeconds()).slice(-2);
-    const rand = Math.random().toString(36).slice(2,7).toUpperCase();
-    return `NP-${ts}-${rand}`;
-  }
-  function genClientId() {
-    return Math.random().toString(36).slice(2,10);
-  }
-
-  function sendLogThenRedirect(n, participantID, clientId) {
-    const url = conditionPrefix + n + `?participantID=${encodeURIComponent(participantID)}&clientId=${encodeURIComponent(clientId)}`;
-    document.getElementById('manual').href = url;
-
-    const payload = {
-      participantID: participantID,
-      clientId: clientId,
-      condition: n,
-      referrer: document.referrer || '',
-      userAgent: navigator.userAgent || '',
-      extra: {host: location.hostname}
-    };
-
-    if (LOG_ENDPOINT && LOG_ENDPOINT !== 'https://neophone.in/.netlify/functions/logAssignment') {
+  <script>
+    /* Robust logging + redirect for Neophone pilot */
+    const nConditions = 8;
+    const conditionPrefix = 'https://neophone.in/condition'; // if conditions are on same domain
+    const LOG_ENDPOINT = 'https://neophone.in/.netlify/functions/logAssignment'; // your Netlify function
+    
+    function genParticipantID() {
+      const now = new Date();
+      const ts = now.getFullYear().toString()
+                 + ('0'+(now.getMonth()+1)).slice(-2)
+                 + ('0'+now.getDate()).slice(-2)
+                 + '-'
+                 + ('0'+now.getHours()).slice(-2)
+                 + ('0'+now.getMinutes()).slice(-2)
+                 + ('0'+now.getSeconds()).slice(-2);
+      const rand = Math.random().toString(36).slice(2,7).toUpperCase();
+      return `NP-${ts}-${rand}`;
+    }
+    function genClientId() {
+      return Math.random().toString(36).slice(2,10);
+    }
+    
+    function attemptLog(payload) {
+      // 1) Try navigator.sendBeacon (no preflight)
       try {
         const blob = new Blob([JSON.stringify(payload)], {type: 'application/json'});
-        if (navigator.sendBeacon) {
-          navigator.sendBeacon(LOG_ENDPOINT, blob);
-          // small delay to help beacon be delivered
-          setTimeout(()=> window.location.replace(url), 250);
-          return;
+        const beaconOk = navigator.sendBeacon && navigator.sendBeacon(LOG_ENDPOINT, blob);
+        if (beaconOk) {
+          console.log('LOG: sendBeacon queued');
         } else {
-          fetch(LOG_ENDPOINT, {method:'POST', body: JSON.stringify(payload), headers:{'Content-Type':'application/json'}})
-            .catch(()=>{})
-            .finally(()=> setTimeout(()=> window.location.replace(url), 250));
-          return;
+          console.log('LOG: sendBeacon not available or returned false');
         }
       } catch (e) {
-        // fallback to redirect if logging fails
-        window.location.replace(url);
-        return;
+        console.warn('LOG: sendBeacon error', e);
       }
-    } else {
-      // no logging endpoint set: just redirect
-      window.location.replace(url);
+    
+      // 2) Also try fetch with keepalive as fallback (same-origin avoids CORS)
+      // keepalive sends body even during unload on many browsers
+      try {
+        fetch(LOG_ENDPOINT, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload),
+          keepalive: true, // helpful for background posting
+        }).then(res => {
+          console.log('LOG: fetch fallback response', res && res.status);
+        }).catch(err => {
+          console.warn('LOG: fetch fallback error', err);
+        });
+      } catch (err) {
+        console.warn('LOG: fetch fallback threw', err);
+      }
     }
-  }
-
-  function pickAndGo() {
-    const n = Math.floor(Math.random()*nConditions) + 1; // 1..nConditions
-    const pid = genParticipantID();
-    const cid = genClientId();
-    sendLogThenRedirect(n, pid, cid);
-  }
-
-  setTimeout(pickAndGo, 300);
-</script>
+    
+    function sendLogThenRedirect(n, participantID, clientId) {
+      // Build condition URL with query params
+      const url = conditionPrefix + n + `?participantID=${encodeURIComponent(participantID)}&clientId=${encodeURIComponent(clientId)}`;
+      document.getElementById('manual') && (document.getElementById('manual').href = url);
+    
+      // Prepare payload
+      const payload = {
+        participantID,
+        clientId,
+        condition: n,
+        referrer: document.referrer || '',
+        userAgent: navigator.userAgent || '',
+        extra: {host: location.hostname}
+      };
+    
+      // Attempt logging
+      attemptLog(payload);
+    
+      // Wait slightly longer to give time for beacon to send, then redirect
+      // 700ms is more reliable across devices; increase if needed
+      setTimeout(() => {
+        window.location.replace(url);
+      }, 700);
+    }
+    
+    function pickAndGo() {
+      const n = Math.floor(Math.random()*nConditions) + 1; // 1..nConditions
+      const pid = genParticipantID();
+      const cid = genClientId();
+      console.log('DEBUG: selected condition', n, 'pid', pid, 'cid', cid);
+      sendLogThenRedirect(n, pid, cid);
+    }
+    
+    // Small delay so the page renders and DevTools can attach if needed
+    setTimeout(pickAndGo, 300);
+    </script>
+    
 </body>
 </html>
