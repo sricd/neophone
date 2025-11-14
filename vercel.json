@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/",         "destination": "/index.html" },
+    { "source": "/start",    "destination": "/start.html" },
+    { "source": "/condition1", "destination": "/index1.html" },
+    { "source": "/condition2", "destination": "/index2.html" },
+    { "source": "/condition3", "destination": "/index3.html" },
+    { "source": "/condition4", "destination": "/index4.html" },
+    { "source": "/condition5", "destination": "/index5.html" },
+    { "source": "/condition6", "destination": "/index6.html" },
+    { "source": "/condition7", "destination": "/index7.html" },
+    { "source": "/condition8", "destination": "/index8.html" }
+  ]
+}
