@@ -2233,3 +2233,82 @@ section.chatbox {
   }
 
 }
+/* ===== Chat: ensure thread scroll + visible close button ===== */
+/* Paste this at the end of main.css (after other mobile rules) */
+
+#chat {
+  /* ensure layout for chat internals */
+  display: block;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Chat header should be fixed at top of panel so thread area scrolls independently */
+#chat .chat-head {
+  position: relative;
+  z-index: 3;
+  background: transparent;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* thread = the messages container; give it an explicit scrollable area */
+#chat .thread,
+#chat .messages,
+.chat-thread {
+  /* adapt to your layout: prefer a calc based on chat height */
+  max-height: calc(100% - 64px); /* leave room for header (approx 56-64px) and input area */
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch; /* smooth scrolling on iOS */
+  padding: 10px 12px;
+  box-sizing: border-box;
+}
+
+/* if you have an input/footer, make sure it doesn't overlap the thread */
+#chat .chat-footer,
+#chat .composer,
+.chat-input {
+  z-index: 2;
+  position: relative;
+}
+
+/* Close button styling — ensure it is visible and clickable */
+#chat .chat-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: none;
+  cursor: pointer;
+  z-index: 999999; /* make sure it's above chat header content */
+  padding: 4px;
+}
+
+/* Hover/focus states */
+#chat .chat-close:focus,
+#chat .chat-close:hover {
+  outline: none;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.18);
+}
+
+/* increase visibility of contained SVG */
+#chat .chat-close svg { display: block; width:18px; height:18px; }
+
+/* If any parent had overflow hidden, ensure header/clsoe not clipped */
+#chat, #chat * { -webkit-font-smoothing:antialiased; }
+
+/* Small-screen adjustments so close always remains in safe area */
+@media (max-width: 768px) {
+  #chat .chat-close { top: calc(8px + env(safe-area-inset-top, 0)); right: calc(8px + env(safe-area-inset-right, 8px)); }
+  #chat .thread { max-height: calc(70vh - 64px); }
+}
