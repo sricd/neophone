@@ -22,10 +22,10 @@
   </div>
 
   <script>
-    /* Robust logging + redirect for Neophone pilot */
+    /* Single-send logging: sendBeacon preferred; fetch used only as fallback */
     const nConditions = 8;
-    const conditionPrefix = 'https://neophone.in/condition'; // if conditions are on same domain
-    const LOG_ENDPOINT = 'https://neophone.in/.netlify/functions/logAssignment'; // your Netlify function
+    const conditionPrefix = 'https://neophone.in/condition';
+    const LOG_ENDPOINT = 'https://neophone.in/.netlify/functions/logAssignment';
     
     function genParticipantID() {
       const now = new Date();
@@ -43,44 +43,42 @@
       return Math.random().toString(36).slice(2,10);
     }
     
-    function attemptLog(payload) {
-      // 1) Try navigator.sendBeacon (no preflight)
+    async function attemptLogOnce(payload) {
+      // prefer navigator.sendBeacon
       try {
-        const blob = new Blob([JSON.stringify(payload)], {type: 'application/json'});
-        const beaconOk = navigator.sendBeacon && navigator.sendBeacon(LOG_ENDPOINT, blob);
-        if (beaconOk) {
-          console.log('LOG: sendBeacon queued');
+        if (navigator.sendBeacon) {
+          const blob = new Blob([JSON.stringify(payload)], {type: 'application/json'});
+          const beaconOk = navigator.sendBeacon(LOG_ENDPOINT, blob);
+          if (beaconOk) {
+            console.log('LOG: sendBeacon queued (no fallback).');
+            return {sentBy: 'beacon'};
+          }
+          console.warn('LOG: sendBeacon returned false.');
         } else {
-          console.log('LOG: sendBeacon not available or returned false');
+          console.warn('LOG: sendBeacon not available in this browser.');
         }
       } catch (e) {
-        console.warn('LOG: sendBeacon error', e);
+        console.warn('LOG: sendBeacon threw', e);
       }
     
-      // 2) Also try fetch with keepalive as fallback (same-origin avoids CORS)
-      // keepalive sends body even during unload on many browsers
+      // fallback: use fetch with keepalive (same-origin avoids CORS preflight)
       try {
-        fetch(LOG_ENDPOINT, {
+        const resp = await fetch(LOG_ENDPOINT, {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify(payload),
-          keepalive: true, // helpful for background posting
-        }).then(res => {
-          console.log('LOG: fetch fallback response', res && res.status);
-        }).catch(err => {
-          console.warn('LOG: fetch fallback error', err);
+          keepalive: true
         });
+        console.log('LOG: fetch fallback status', resp.status);
+        return {sentBy: 'fetch', status: resp.status};
       } catch (err) {
-        console.warn('LOG: fetch fallback threw', err);
+        console.warn('LOG: fetch fallback error', err);
+        return {sentBy: 'none', error: err};
       }
     }
     
     function sendLogThenRedirect(n, participantID, clientId) {
-      // Build condition URL with query params
       const url = conditionPrefix + n + `?participantID=${encodeURIComponent(participantID)}&clientId=${encodeURIComponent(clientId)}`;
-      document.getElementById('manual') && (document.getElementById('manual').href = url);
-    
-      // Prepare payload
       const payload = {
         participantID,
         clientId,
@@ -90,27 +88,24 @@
         extra: {host: location.hostname}
       };
     
-      // Attempt logging
-      attemptLog(payload);
-    
-      // Wait slightly longer to give time for beacon to send, then redirect
-      // 700ms is more reliable across devices; increase if needed
-      setTimeout(() => {
-        window.location.replace(url);
-      }, 700);
+      // Attempt to send, then redirect after a short delay to allow delivery
+      attemptLogOnce(payload).finally(() => {
+        // give a short extra pause to improve reliability across browsers
+        setTimeout(() => { window.location.replace(url); }, 600);
+      });
     }
     
     function pickAndGo() {
-      const n = Math.floor(Math.random()*nConditions) + 1; // 1..nConditions
+      const n = Math.floor(Math.random()*nConditions) + 1;
       const pid = genParticipantID();
       const cid = genClientId();
-      console.log('DEBUG: selected condition', n, 'pid', pid, 'cid', cid);
+      console.log('DEBUG: selected', n, pid, cid);
       sendLogThenRedirect(n, pid, cid);
     }
     
-    // Small delay so the page renders and DevTools can attach if needed
     setTimeout(pickAndGo, 300);
     </script>
+    
     
 </body>
 </html>
