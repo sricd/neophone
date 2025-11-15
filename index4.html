@@ -164,7 +164,7 @@
               <a href="#x1" id="btn-about-explore" class="btn btn-primary me-sm-3 mb-2 mb-sm-0">
                 <i class="bi bi-phone me-2"></i> Explore X1
               </a>
-              <a id="btn-about-chat" href="#chat" class="btn btn-outline-primary">
+              <a id="btn-about-chat" href="#chat" class="btn btn-outline-primary open-chat-mobile">
                 <i class="bi bi-chat-left-text me-2"></i> Chat with NeoPhone
               </a>
               
@@ -952,7 +952,7 @@
               <div class="perks small text-muted mb-3">Includes 12-month limited warranty • 30-day demo return</div>
               <div class="d-flex flex-column align-items-center">
                 <a href="#" class="btn btn-primary w-75 mb-2">Buy Now</a>
-                <a href="#chat" class="btn btn-outline-primary w-75 chat-trigger">Chat to Know More</a>
+                <a href="#chat" class="btn btn-outline-primary open-chat-mobile w-75 chat-trigger">Chat to Know More</a>
               </div>
             </div>
           </div>
@@ -974,7 +974,7 @@
               <div class="perks small text-muted mb-3">Priority support • 12-month warranty • 30-day demo return</div>
               <div class="d-flex flex-column align-items-center">
                 <a href="#" class="btn btn-primary w-75 mb-2">Buy Now</a>
-                <a href="#chat" class="btn btn-outline-primary w-75 chat-trigger">Chat to Know More</a>
+                <a href="#chat" class="btn btn-outline-primary open-chat-mobile w-75 chat-trigger">Chat to Know More</a>
               </div>
             </div>
           </div>
@@ -996,7 +996,7 @@
               <div class="perks small text-muted mb-3">Priority support • Extended warranty options available</div> 
               <div class="d-flex flex-column align-items-center">
                 <a href="#" class="btn btn-primary w-75 mb-2">Buy Now</a>
-                <a href="#chat" class="btn btn-outline-primary w-75 chat-trigger">Chat to Know More</a>
+                <a href="#chat" class="btn btn-outline-primary open-chat-mobile w-75 chat-trigger">Chat to Know More</a>
               </div>
             </div>
           </div>
@@ -1778,7 +1778,138 @@
         });
       })();
       </script>
-      
+      <script>
+        (function () {
+          if (window.__neophone_mobile_chat_helpers_installed) return;
+          window.__neophone_mobile_chat_helpers_installed = true;
+        
+          const MOBILE_MAX = 820; // treat <= this as mobile/tablet for our UX (tweakable)
+        
+          function isMobileOrTablet() {
+            try { return window.matchMedia(`(max-width: ${MOBILE_MAX}px)`).matches; }
+            catch (e) { return (window.innerWidth || 0) <= MOBILE_MAX; }
+          }
+        
+          // Find survey button (created dynamically in your pages)
+          function getSurveyBtn() {
+            return document.querySelector('.survey-btn');
+          }
+        
+          // Get chat controls
+          const chatRoot = document.getElementById('chat');
+          const toggle = document.getElementById('chatbotToggle');
+          const closeBtn = (chatRoot && chatRoot.querySelector('.chat-close')) || null;
+        
+          // Utility to open chat in mobile mode
+          function openChatMobile() {
+            if (!chatRoot) return;
+            chatRoot.classList.remove('mobile-hidden');
+            chatRoot.classList.add('mobile-open');
+            if (toggle) toggle.style.display = 'none';
+            // nudge survey button if present so it doesn't overlap
+            const s = getSurveyBtn();
+            if (s) s.classList.add('chat-overlap');
+            // ensure thread scrolled down if a thread exists
+            try {
+              const thread = chatRoot.querySelector('.thread, .messages, .chat-thread, [role="log"]');
+              if (thread) thread.scrollTop = thread.scrollHeight;
+            } catch (e) {}
+          }
+        
+          function closeChatMobileRestoreSurvey() {
+            if (!chatRoot) return;
+            chatRoot.classList.remove('mobile-open');
+            // after animation, hide and show toggle/survey
+            setTimeout(() => {
+              chatRoot.classList.add('mobile-hidden');
+              if (toggle) toggle.style.display = 'flex';
+              const s = getSurveyBtn();
+              if (s) s.classList.remove('chat-overlap');
+            }, 240);
+          }
+        
+          // Attach close handler to restore survey button
+          if (closeBtn && !closeBtn.__neophone_bound) {
+            closeBtn.addEventListener('click', function (e) {
+              e.preventDefault();
+              closeChatMobileRestoreSurvey();
+            });
+            closeBtn.__neophone_bound = true;
+          }
+        
+          // If toggle exists, ensure clicking toggle opens chat
+          if (toggle && !toggle.__neophone_bound) {
+            toggle.addEventListener('pointerdown', function (e) {
+              e.preventDefault();
+              openChatMobile();
+            });
+            toggle.__neophone_bound = true;
+          }
+        
+          // Find the four buttons you referenced. We'll look for several fallbacks:
+          //  - class 'open-chat-mobile' (recommended to add to the 4 buttons)
+          //  - any element whose text contains 'chat' (case-insensitive)
+          //  - anchors with aria-label containing 'chat'
+          function findChatOpenButtons() {
+            const list = new Set();
+        
+            // preferred: explicit class if you add it
+            document.querySelectorAll('.open-chat-mobile').forEach(el => list.add(el));
+        
+            // fallback: look for anchors/buttons containing 'chat' in text
+            document.querySelectorAll('a,button').forEach(el => {
+              const txt = (el.textContent || '').trim().toLowerCase();
+              const aria = (el.getAttribute && (el.getAttribute('aria-label') || '')).toLowerCase();
+              if (!el.hasAttribute('data-no-chat-hook') && (txt.includes('chat') || aria.includes('chat') || txt.includes('neoprime'))) {
+                list.add(el);
+              }
+            });
+        
+            // fallback: any element with data-open-chat
+            document.querySelectorAll('[data-open-chat]').forEach(el => list.add(el));
+        
+            return Array.from(list);
+          }
+        
+          // bind click behavior to found triggers
+          function bindTriggers() {
+            const triggers = findChatOpenButtons();
+            triggers.forEach(el => {
+              if (el.__neophone_chat_bound) return;
+              el.addEventListener('click', function (evt) {
+                // On desktop do nothing special; allow normal behavior (anchor scrolling etc.)
+                if (!isMobileOrTablet()) return; // let the link act normally on desktop
+        
+                // On mobile: open chat panel instead of following link
+                evt.preventDefault();
+                openChatMobile();
+        
+                // short focus for accessibility
+                setTimeout(() => {
+                  try { (chatRoot.querySelector('.thread') || chatRoot).focus(); } catch (e) {}
+                }, 120);
+              });
+              el.__neophone_chat_bound = true;
+            });
+          }
+        
+          // initial bind + re-bind on DOM changes (useful if content is inserted later)
+          bindTriggers();
+          const observer = new MutationObserver(function () { bindTriggers(); });
+          observer.observe(document.body, { childList: true, subtree: true });
+        
+          // Defensive: if chat is programmatically opened elsewhere, ensure survey button nudges up
+          const attrObs = new MutationObserver(function (mutList) {
+            const s = getSurveyBtn();
+            if (!s) return;
+            if (chatRoot && chatRoot.classList.contains('mobile-open')) s.classList.add('chat-overlap');
+            else s.classList.remove('chat-overlap');
+          });
+          if (chatRoot) attrObs.observe(chatRoot, { attributes: true, attributeFilter: ['class'] });
+        
+        })();
+        </script>
+        
           
     
     
