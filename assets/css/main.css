@@ -1855,24 +1855,8 @@ testimonials .testimonial-img {
 .chatbox .botname::after{ content: "NeoPhone Assistant"; }
 .chatbox[data-anthro="high"] .botname::after{ content: "Neo"; }
 
-/* Only for data-anthro=high pages, provide an image */
-.chatbox[data-anthro="high"] .avatar{
-  background: center/cover no-repeat url('/shared/neo-avatar.png');
-}
 
 
-/* Mobile sizing & safe areas */
-@media (max-width: 600px){
-  :root{
-    --chatbox-w: min(92vw, 420px);
-    --chatbox-h: clamp(320px, 52vh, 560px);
-    --chatbox-offset: 16px;
-  }
-  .chatbox{
-    right: calc(env(safe-area-inset-right, 0px) + var(--chatbox-offset));
-    bottom: calc(env(safe-area-inset-bottom, 0px) + var(--chatbox-offset));
-  }
-}
 
 /* === NeoPhone Chatbox — Light/Professional, fixed, internally scrollable === */
 :root{
@@ -1934,15 +1918,6 @@ testimonials .testimonial-img {
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;
 }
-.chatbox .chip{
-  height: 26px; width: 26px; border-radius: 8px;
-  background: rgba(255,255,255,.18);
-  border: 1px solid rgba(255,255,255,.28);
-  flex: 0 0 26px;
-}
-.chatbox .titles{ line-height: 1.15; }
-.chatbox .titles strong{ font-weight: 650; letter-spacing: .2px; }
-.chatbox .titles small{ opacity: .92; }
 
 /* Thread: fills remaining space and scrolls internally */
 .chatbox .thread{
@@ -1978,44 +1953,7 @@ testimonials .testimonial-img {
   word-wrap: break-word;
   box-shadow: 0 1px 0 rgba(17,24,39,.04);
 }
-.chatbox .row.user .bubble{
-  background: var(--user-bg);
-  border-color: #dee3fb;
-  border-radius: 14px 14px 6px 14px;
-}
-.chatbox .row.bot .bubble{
-  border-radius: 14px 14px 14px 6px;
-}
-.chatbox .label{
-  font-size: 11px;
-  color: var(--muted);
-  margin: 0 0 6px 2px;
-}
 
-/* Avatar (only for high anthropomorphism) */
-.chatbox .avatar{
-  width: 28px; height: 28px; flex: 0 0 28px;
-  border-radius: 50%;
-  display: none;
-  background: #dfe7fb; border: 1px solid #c9d6f5;
-}
-
-/* Anthropomorphism toggles */
-.chatbox .botname-inline{ font-weight: 600; }
-.chatbox[data-anthro="high"] .avatar{ display: inline-block; }
-.chatbox[data-anthro="high"] .row.bot .bubble{
-  box-shadow: 0 4px 12px rgba(16,58,122,.10);
-  border-color: #d6e1ff;
-}
-
-/* Mobile tuning */
-@media (max-width: 600px){
-  :root{
-    --chatbox-w: min(92vw, 380px);
-    --chatbox-h: clamp(300px, 50vh, 520px);
-    --chatbox-offset: 16px;
-  }
-}
 
 /* Chatbox: neutralize global <section> padding and spacing */
 section.chatbox {
@@ -2028,20 +1966,6 @@ section.chatbox {
   margin: 0 !important;      /* ensure no unexpected margins */
   box-sizing: border-box;
 }
-
-/* --- Chat header logo (chip) --- */
-.chatbox .chip{
-  background: center/contain no-repeat url("/assets/img/neo-logo.svg"); /* or .png */
-  border: 0;
-}
-
-/* --- Avatar (only visible for anthropomorphism=high) --- */
-.chatbox .avatar{
-  background: center/cover no-repeat url("/assets/img/neo-avatar.png");
-  border: 0;
-}
-.chatbox[data-anthro="low"]  .avatar{ display:none; }
-.chatbox[data-anthro="high"] .avatar{ display:inline-block; }
 
 
 /* === Bubble palette (base for ALL conditions) === */
@@ -2091,19 +2015,6 @@ section.chatbox {
 
 /* Optional: tighter spacing so alternation feels airy */
 .chatbox .row{ margin: 12px 0; }
-
-/* === Chat: real images for header chip + avatar (wins over older rules) === */
-.chatbox .chip{
-  background: center/contain no-repeat url("/assets/img/logo.png") !important;
-  border: 0 !important;
-  filter: drop-shadow(0 1px 0 rgba(0,0,0,.06));
-}
-
-/* Use any headshot/mascot file you have; adjust the filename if different */
-.chatbox .avatar{
-  background: center/cover no-repeat url("/assets/img/neo-avatar.png") !important;
-  border: 0 !important;
-}
 
 
 /* Chip and avatar as <img> elements */
@@ -2161,280 +2072,261 @@ section.chatbox {
 .chatbox .row.user .bubble{ border-radius: 18px 18px 10px 18px; }
 .chatbox .row.bot  .bubble{ border-radius: 18px 18px 18px 10px; }
 
-/* ***********************
-   MOBILE FIXES FOR SURVEY BUTTON + CHAT
-   Does not affect desktop
-************************ */
-@media (max-width: 768px) {
 
-  /* Move your existing .survey-btn slightly upward for mobile */
-  .survey-btn {
-    bottom: 80px !important;  /* leave space for chat bubble */
-    font-size: 16px;
-    padding: 12px 22px;
-    z-index: 99990 !important;
-  }
 
-  /* Chat starts hidden on mobile */
-  #chat.mobile-hidden {
-    display: none !important;
-  }
+/* =========================
+   NeoPhone chat CSS (final)
+   Replace existing chat CSS with this block.
+   Works with your HTML:
+   <div id="chat" class="chatbox" data-anthro="high" ...>
+   - Selectors: #chat.chatbox, .chat-head, .chat-close, .thread, .row, .bubble, img.avatar
+   - Keeps .survey-btn and #chatbotToggle behavior
+   ========================= */
 
-  /* Mobile chat open animation */
-  #chat.mobile-open {
-    display: block !important;
-    position: fixed !important;
-    bottom: 12px;
-    left: 12px;
-    right: 12px;
-    height: 70vh;
-    border-radius: 16px;
-    background: white;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-    transform: translateY(20px) scale(0.98);
-    opacity: 0;
-    animation: chatPop 0.28s ease forwards;
-    z-index: 99999 !important;
-  }
+/* -------- Variables (edit these to tweak look) -------- */
+:root {
+  --chat-width: 360px;
+  --chat-max-h: 78vh;
+  --chat-offset: 18px;
 
-  @keyframes chatPop {
-    from { opacity:0; transform: translateY(20px) scale(0.97); }
-    to { opacity:1; transform: translateY(0) scale(1); }
-  }
+  --panel-bg: #ffffff;
+  --panel-border: 1.5px solid #17427c;
+  --panel-radius: 14px;
+  --panel-shadow: 0 20px 50px rgba(4,16,48,0.28);
 
-  /* Chat close button (SVG) */
-  .chat-close {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: transparent;
-    border: none;
-    padding: 6px;
-    cursor: pointer;
-    z-index: 100000;
-  }
+  --header-bg: linear-gradient(90deg,#0f4fa8,#2b8dff);
+  --header-color: #ffffff;
+  --header-h: 64px;
 
-  /* Chat toggle bubble for mobile */
-  #chatbotToggle {
-    position: fixed;
-    bottom: 18px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: linear-gradient(90deg,#007bff,#00a0ff);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    border: none;
-    z-index: 99995 !important;
-  }
+  --bot-bg: #ffffff;
+  --bot-border: #dfe5f3;
+  --bot-text: #0f172a;
 
-}
-/* ===== Chat: ensure thread scroll + visible close button ===== */
-/* Paste this at the end of main.css (after other mobile rules) */
+  --user-grad: linear-gradient(160deg,#5A8CFF 0%, #3F6FDB 100%);
+  --user-text: #ffffff;
 
-#chat {
-  /* ensure layout for chat internals */
-  display: block;
-  position: relative;
-  overflow: hidden;
+  --muted: #5a6883;
+  --scroll-thumb: #c3d0eb;
+
+  --survey-mobile-offset: 80px; /* preserve your survey button spacing on mobile */
 }
 
-/* Chat header should be fixed at top of panel so thread area scrolls independently */
-#chat .chat-head {
-  position: relative;
-  z-index: 3;
-  background: transparent;
-  padding: 12px 16px;
+/* -------- Top-level container (matches your <div id="chat" class="chatbox">) -------- */
+#chat.chatbox {
+  position: fixed !important;
+  right: var(--chat-offset) !important;
+  bottom: var(--chat-offset) !important;
+  width: var(--chat-width) !important;
+  max-height: var(--chat-max-h) !important;
+  border-radius: var(--panel-radius) !important;
+  overflow: hidden !important;
+  z-index: 99999 !important;
+  background: var(--panel-bg) !important;
+  border: var(--panel-border) !important;
+  box-shadow: var(--panel-shadow) !important;
+  transform-origin: bottom right;
+  transition: transform .26s cubic-bezier(.2,.9,.28,1), opacity .18s ease;
+}
+
+/* -------- Header (your <header class="chat-head">) -------- */
+#chat.chatbox .chat-head {
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 12px 14px;
+  min-height: var(--header-h);
+  background: var(--header-bg);
+  color: var(--header-color);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  position: relative; /* allows absolute close button inside header */
+  z-index: 3;
+}
+#chat.chatbox .chat-head .titles { padding-right: 52px; line-height:1.15; }
+#chat.chatbox .chat-head .titles strong { font-weight:700; }
+#chat.chatbox .chat-head small { opacity:.92; font-weight:400; }
+
+/* header chip image */
+#chat.chatbox .chip {
+  width: 32px; height: 32px; flex: 0 0 32px;
+  background-position: center; background-size: contain; background-repeat: no-repeat;
 }
 
-/* thread = the messages container; give it an explicit scrollable area */
-#chat .thread,
-#chat .messages,
-.chat-thread {
-  /* adapt to your layout: prefer a calc based on chat height */
-  max-height: calc(100% - 64px); /* leave room for header (approx 56-64px) and input area */
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch; /* smooth scrolling on iOS */
-  padding: 10px 12px;
-  box-sizing: border-box;
-}
-
-/* if you have an input/footer, make sure it doesn't overlap the thread */
-#chat .chat-footer,
-#chat .composer,
-.chat-input {
-  z-index: 2;
-  position: relative;
-}
-
-/* Close button styling — ensure it is visible and clickable */
-#chat .chat-close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.95);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  border: none;
-  cursor: pointer;
-  z-index: 999999; /* make sure it's above chat header content */
-  padding: 4px;
-}
-
-/* Hover/focus states */
-#chat .chat-close:focus,
-#chat .chat-close:hover {
-  outline: none;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 22px rgba(0,0,0,0.18);
-}
-
-/* increase visibility of contained SVG */
-#chat .chat-close svg { display: block; width:18px; height:18px; }
-
-/* If any parent had overflow hidden, ensure header/clsoe not clipped */
-#chat, #chat * { -webkit-font-smoothing:antialiased; }
-
-/* Small-screen adjustments so close always remains in safe area */
-@media (max-width: 768px) {
-  #chat .chat-close { top: calc(8px + env(safe-area-inset-top, 0)); right: calc(8px + env(safe-area-inset-right, 8px)); }
-  #chat .thread { max-height: calc(70vh - 64px); }
-}
-
-/* ======= Chat: fixed placement + mobile toggle + internal scroll ======= */
-
-/* top-level chat container enforced style (desktop default) */
-#chat {
-  position: fixed !important;
-  right: 18px !important;
-  bottom: 18px !important;
-  width: 360px !important;
-  max-height: 78vh !important;
-  border-radius: 14px !important;
-  overflow: hidden !important;
-  box-shadow: 0 20px 50px rgba(4,16,48,0.28) !important;
-  z-index: 99999 !important;
-  background: #fff !important;
-  transition: transform 260ms cubic-bezier(.2,.9,.28,1), opacity 220ms ease;
-  transform-origin: bottom right;
-}
-
-/* Ensure the chat header (title bar) is visible and sits above messages */
-#chat .chat-head, #chat header.chat-head {
-  position: relative !important;
-  z-index: 3 !important;
-  background: linear-gradient(90deg, #0f4fa8, #2b8dff) !important; /* blue header if missing */
-  color: #fff !important;
-  padding: 12px 14px !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-  box-shadow: 0 2px 8px rgba(4,16,48,0.06);
-}
-
-/* header title text */
-#chat .chat-head .titles, #chat header .titles {
-  color: #fff !important;
-  font-weight: 700 !important;
-  font-size: 15px !important;
-}
-
-/* close button always visible on top-right of header */
-#chat .chat-close {
+/* -------- Close button (slightly reduced so it doesn't overlap titles) -------- */
+#chat.chatbox .chat-close {
   position: absolute !important;
   top: 10px !important;
   right: 10px !important;
-  z-index: 999999 !important;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.95);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 8px !important;
+  background: rgba(255,255,255,0.95) !important;
+  border: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 4px !important;
+  cursor: pointer !important;
   box-shadow: 0 8px 22px rgba(0,0,0,0.12);
-  border: none;
-  cursor: pointer;
+  z-index: 100000 !important;
+}
+#chat.chatbox .chat-close svg { width: 18px; height: 18px; display:block; }
+
+/* -------- Thread (your <ol class="thread" role="log">) -------- */
+#chat.chatbox .thread {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 12px;
+  list-style: none;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: calc(var(--chat-max-h) - var(--header-h));
 }
 
-/* make sure the chat has an internal scroll area for messages */
-#chat .thread,
-#chat .messages,
-#chat .chat-body,
-.chat-thread {
-  max-height: calc(78vh - 64px) !important; /* header ~64px */
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch !important;
-  padding: 12px !important;
+/* Scrollbar thumb */
+#chat.chatbox .thread::-webkit-scrollbar { width:8px; height:8px; }
+#chat.chatbox .thread::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius:8px; }
+
+/* Reserve visible space for last message */
+#chat.chatbox .thread .row:last-child,
+#chat.chatbox .thread .bubble:last-child { margin-bottom: 20px !important; }
+
+/* -------- Rows & bubbles (matches your markup: <li class="row user|bot"><div class="bubble">...) -------- */
+#chat.chatbox .row { display:flex; gap:10px; margin:12px 0; align-items:flex-end; }
+#chat.chatbox .row.user { justify-content:flex-end; }
+#chat.chatbox .row.bot  { justify-content:flex-start; align-items:flex-start; }
+
+#chat.chatbox .bubble {
+  max-width: 78%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--bot-border);
+  background: var(--bot-bg);
+  color: var(--bot-text);
+  line-height: 1.45;
+  word-wrap: break-word;
+  box-shadow: 0 1px 0 rgba(17,24,39,0.04);
 }
 
-/* hide the external chat scrollbar if present and ensure internal scroll appears */
-#chat::-webkit-scrollbar { display: none !important; }
+/* user bubbles (your user's messages) */
+#chat.chatbox .row.user .bubble {
+  background: var(--user-grad);
+  color: var(--user-text);
+  border: 0;
+  border-radius: 18px 18px 10px 18px;
+  box-shadow: 0 6px 14px rgba(16,58,122,0.18);
+}
 
-/* MOBILE RULES */
+/* bot bubble */
+#chat.chatbox .row.bot .bubble {
+  border-radius: 14px 14px 14px 8px;
+}
+
+/* small label (bot name inside bubble) */
+#chat.chatbox .label { font-size:11px; color:var(--muted); margin-bottom:6px; display:block; }
+
+/* -------- Avatar: keep img.avatar zoom trick (applies to <img class="avatar"> in your HTML) -------- */
+/* This handles avatars with extra padding and recenters/zooms automatically */
+#chat.chatbox img.avatar {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: block;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
+  clip-path: circle(20px at 50% 50%);
+  transform: translateY(-6%) scale(2.1);   /* <--- avatar zoom tweak you asked to keep */
+  transform-origin: 50% 42%;
+  border: 0;
+  box-shadow: 0 0 0 2px #e7edff, 0 2px 6px rgba(16,58,122,0.18);
+}
+
+/* show avatar only for high-anthro, hide for low */
+#chat.chatbox[data-anthro="low"] img.avatar { display: none; }
+#chat.chatbox[data-anthro="high"] img.avatar { display: block; }
+
+/* -------- Anthro variants (use the data-anthro attribute on your #chat element) -------- */
+/* Low anthro: subtle, less "polished" user bubble */
+#chat.chatbox[data-anthro="low"] .row.user .bubble {
+  background: linear-gradient(180deg,#1d4fb8,#0f3368);
+  box-shadow: 0 4px 10px rgba(8,20,48,0.08);
+}
+
+/* High anthro: more elevated user bubble and avatar visible */
+#chat.chatbox[data-anthro="high"] .row.user .bubble {
+  background: linear-gradient(160deg,#5A8CFF 0%, #3F6FDB 100%);
+  box-shadow: 0 6px 16px rgba(16,58,122,0.18);
+}
+
+/* -------- Desktop / Mobile behaviour -------- */
+/* Desktop: chat fixed open and interactive */
+@media (min-width: 769px) {
+  #chat.chatbox { pointer-events: auto; }
+  /* keep it visible even if .mobile-hidden accidentally set */
+  #chat.chatbox.mobile-hidden { display:block !important; opacity:1 !important; visibility:visible !important; }
+}
+
+/* Mobile: collapsed toggle, overlay when open */
 @media (max-width: 768px) {
-  /* survey button sits bottom-center (leave your desktop unchanged) */
+  /* Keep survey button above chat toggle */
   .survey-btn {
-    bottom: calc(70px + env(safe-area-inset-bottom, 12px)) !important;
+    bottom: var(--survey-mobile-offset) !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
-    z-index: 99940 !important; /* below chat and toggle */
+    z-index: 99940 !important;
   }
 
-  /* chat collapsed on mobile (hidden panel) */
-  #chat {
-    width: calc(100% - 28px) !important;
+  /* collapsed (hidden) by default */
+  #chat.chatbox {
     left: 14px !important;
     right: 14px !important;
     bottom: 14px !important;
+    width: calc(100% - 28px) !important;
     max-height: 86vh !important;
-    transform: translateY(20px) scale(0.98) !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
+    transform: translateY(20px) scale(0.98);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    border-radius: 16px;
   }
 
-  /* open state on mobile */
-  #chat.mobile-open {
+  /* visible overlay when mobile-open is set */
+  #chat.chatbox.mobile-open {
     transform: translateY(0) scale(1) !important;
     opacity: 1 !important;
     visibility: visible !important;
     pointer-events: auto !important;
     z-index: 99999 !important;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.32) !important;
   }
 
-  /* Toggle bubble (bottom-right) — we'll inject it with JS */
+  /* Toggle button style — JS creates #chatbotToggle if it's missing */
   #chatbotToggle {
     position: fixed !important;
-    right: 18px !important;        /* reuse scroll-to-top corner */
-    bottom: calc(18px + env(safe-area-inset-bottom, 0)) !important;
-    width: 60px !important;
-    height: 60px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    bottom: 18px !important;
+    width: 64px !important;
+    height: 64px !important;
     border-radius: 999px !important;
     display: flex !important;
-    align-items: center;
-    justify-content: center;
+    align-items: center !important;
+    justify-content: center !important;
     background: linear-gradient(90deg,#007bff,#00a0ff) !important;
     box-shadow: 0 12px 30px rgba(0,0,0,0.18) !important;
     z-index: 99995 !important;
     border: none !important;
   }
 
-  /* hide any old scroll-to-top element if visible */
-  .scroll-to-top, .back-to-top, #scrollTop { display: none !important; }
+  /* make sure close sits in safe area */
+  #chat.chatbox .chat-close { top: calc(8px + env(safe-area-inset-top, 0)); right: calc(8px + env(safe-area-inset-right, 8px)); }
 
-  /* close button stays visible inside mobile open panel */
-  #chat .chat-close { background: white !important; color: #333 !important; }
+  /* thread size inside mobile open */
+  #chat.chatbox.mobile-open .thread { max-height: calc(70vh - var(--header-h)); overflow-y:auto; }
 }
+
+/* -------- Small utilities & reset for chat area -------- */
+#chat.chatbox .chat-head .titles { padding-right: 52px; }
+.scroll-to-top, .back-to-top, #scrollTop, .to-top, .scroll-top { display: none !important; }
+#chat.chatbox::-webkit-scrollbar { display:none; }
+#chat.chatbox, #chat.chatbox * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
