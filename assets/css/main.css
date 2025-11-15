@@ -2336,7 +2336,7 @@ section.chatbox {
 
 /* Make sure survey button sits above chat for all viewport sizes (chat uses z-index ~99999) */
 .survey-btn {
-  z-index: 110000 !important; /* safely above chat and toggles */
+  z-index: 99990 !important; /* safely above chat and toggles */
   position: fixed !important;
   left: 50% !important;
   transform: translateX(-50%) !important;
@@ -2364,7 +2364,7 @@ section.chatbox {
 
 /* If chat is visible and uses .mobile-open, nudge the survey button even higher (defensive) */
 #chat.mobile-open ~ .survey-btn,
-.survey-btn.chat-overlap {
+/*.survey-btn.chat-overlap {
   bottom: calc(120px + env(safe-area-inset-bottom, 12px)) !important;
 }
 

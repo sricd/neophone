@@ -1464,6 +1464,7 @@
           box-shadow: 0 6px 18px rgba(0,0,0,0.2);
           text-decoration: none;
           transition: background 0.2s, transform 0.2s;
+          z-index: 99920;
         }
         .survey-btn:hover {
           background: #003d8c;
@@ -1476,6 +1477,7 @@
             bottom: calc(78px + env(safe-area-inset-bottom, 12px));
             padding: 12px 20px;
             font-size: 16px;
+            z-index: 99920;
           }
         }
       `;
@@ -1778,6 +1780,72 @@
       </script>
       <script>
         (function () {
+          if (window.__neophone_mobile_chat_helpers_installed) return;
+          window.__neophone_mobile_chat_helpers_installed = true;
+        
+          const MOBILE_MAX = 820; // treat <= this as mobile/tablet for our UX (tweakable)
+        
+          function isMobileOrTablet() {
+            try { return window.matchMedia(`(max-width: ${MOBILE_MAX}px)`).matches; }
+            catch (e) { return (window.innerWidth || 0) <= MOBILE_MAX; }
+          }
+        
+          // Find survey button (created dynamically in your pages)
+          function getSurveyBtn() {
+            return document.querySelector('.survey-btn');
+          }
+        
+          // Get chat controls
+          const chatRoot = document.getElementById('chat');
+          const toggle = document.getElementById('chatbotToggle');
+          const closeBtn = (chatRoot && chatRoot.querySelector('.chat-close')) || null;
+        
+          // Utility to open chat in mobile mode
+          function openChatMobile() {
+            if (!chatRoot) return;
+            chatRoot.classList.remove('mobile-hidden');
+            chatRoot.classList.add('mobile-open');
+            if (toggle) toggle.style.display = 'none';
+            // nudge survey button if present so it doesn't overlap
+            const s = getSurveyBtn();
+            //if (s) s.classList.add('chat-overlap');
+            // ensure thread scrolled down if a thread exists
+            try {
+              const thread = chatRoot.querySelector('.thread, .messages, .chat-thread, [role="log"]');
+              if (thread) thread.scrollTop = thread.scrollHeight;
+            } catch (e) {}
+          }
+        
+          function closeChatMobileRestoreSurvey() {
+            if (!chatRoot) return;
+            chatRoot.classList.remove('mobile-open');
+            // after animation, hide and show toggle/survey
+            setTimeout(() => {
+              chatRoot.classList.add('mobile-hidden');
+              if (toggle) toggle.style.display = 'flex';
+              const s = getSurveyBtn();
+              //if (s) s.classList.remove('chat-overlap');
+            }, 240);
+          }
+        
+          // Attach close handler to restore survey button
+          if (closeBtn && !closeBtn.__neophone_bound) {
+            closeBtn.addEventListener('click', function (e) {
+              e.preventDefault();
+              closeChatMobileRestoreSurvey();
+            });
+            closeBtn.__neophone_bound = true;
+          }
+        
+          // If toggle exists, ensure clicking toggle opens chat
+          if (toggle && !toggle.__neophone_bound) {
+            toggle.addEventListener('pointerdown', function (e) {
+              e.preventDefault();
+              openChatMobile();
+            });
+            toggle.__neophone_bound = true;
+          }
+        
           // Find the four buttons you referenced. We'll look for several fallbacks:
           //  - class 'open-chat-mobile' (recommended to add to the 4 buttons)
           //  - any element whose text contains 'chat' (case-insensitive)
@@ -1834,8 +1902,8 @@
           const attrObs = new MutationObserver(function (mutList) {
             const s = getSurveyBtn();
             if (!s) return;
-            if (chatRoot && chatRoot.classList.contains('mobile-open')) s.classList.add('chat-overlap');
-            else s.classList.remove('chat-overlap');
+            //if (chatRoot && chatRoot.classList.contains('mobile-open')) s.classList.add('chat-overlap');
+            //else s.classList.remove('chat-overlap');
           });
           if (chatRoot) attrObs.observe(chatRoot, { attributes: true, attributeFilter: ['class'] });
         
