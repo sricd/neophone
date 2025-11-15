@@ -2387,3 +2387,12 @@ section.chatbox {
     bottom: calc(100px + env(safe-area-inset-bottom, 12px)) !important;
   }
 }
+/* Make sure chat header and close are topmost */
+#chat { z-index: 99999 !important; }
+#chat .chat-close { z-index: 1100000 !important; pointer-events: auto !important; touch-action: manipulation !important; }
+
+/* Keep the survey button below the chat-close on small screens */
+.survey-btn { z-index: 99940 !important; }
+
+/* Ensure the mobile toggle is below chat-close but above survey button */
+#chatbotToggle { z-index: 99990 !important; }

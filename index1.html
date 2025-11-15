@@ -1562,6 +1562,8 @@
           (header || chat).appendChild(closeBtn);
         }
         // size tweaks to avoid overlap
+        closeBtn.style.pointerEvents = closeBtn.style.pointerEvents || 'auto';
+        closeBtn.style.touchAction = closeBtn.style.touchAction || 'manipulation'; // makes iOS treat taps nicely
         closeBtn.style.width = closeBtn.style.width || '32px';
         closeBtn.style.height = closeBtn.style.height || '32px';
         closeBtn.style.top = closeBtn.style.top || '10px';
@@ -1569,7 +1571,34 @@
         closeBtn.style.padding = closeBtn.style.padding || '4px';
         closeBtn.style.borderRadius = closeBtn.style.borderRadius || '6px';
         closeBtn.style.zIndex = closeBtn.style.zIndex || '999999';
-        return closeBtn;
+                // Idempotent binding: bind both pointerdown AND click for touch reliability
+        if (!closeBtn.__neophone_bound) {
+          const handler = function (e) {
+            try { e.stopPropagation(); } catch (_) {}
+            try { e.preventDefault(); } catch (_) {}
+
+            // call your existing mobile close routine if present, otherwise fallback to hiding classes
+            if (typeof closeChatMobile === 'function') {
+              closeChatMobile(chat, document.getElementById('chatbotToggle'));
+            } else {
+              // graceful fallback
+              chat.classList.remove('mobile-open');
+              chat.classList.add('mobile-hidden');
+              const toggle = document.getElementById('chatbotToggle');
+              if (toggle) toggle.style.display = 'flex';
+            }
+            return false;
+          };
+
+          // pointerdown fires earlier on iOS/touch devices (good for iPad)
+          closeBtn.addEventListener('pointerdown', handler, { passive: false });
+          // keep click too, for desktop/mouse fallback
+          closeBtn.addEventListener('click', handler, { passive: false });
+
+          closeBtn.__neophone_bound = true;
+        }
+
+      return closeBtn;
       }
     
       function ensureToggle() {
