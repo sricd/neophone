@@ -1910,6 +1910,11 @@
       })();
       </script>
       <script>
+        /* Unified chat breakpoint: treat <= 1024px as tablet/mobile everywhere */
+        window.__NEOPHONE_CHAT_BREAKPOINT = 1024;
+        </script>
+        
+      <script>
         /* === NeoPhone: tablet close + tablet button->open behavior ===
            Paste ONCE at end of <body>. Idempotent & non-destructive.
            Breakpoint (tablet) defaults to 1024px; change TABLET_BREAKPOINT if you like.
@@ -2051,7 +2056,44 @@
           }); // DOMContentLoaded
         })(); // IIFE
         </script>
-        
+        <script>
+          (function(){
+            const BP = window.__NEOPHONE_CHAT_BREAKPOINT || 1024;
+            function isTabletOrBelow() {
+              try {
+                return !!window.matchMedia && window.matchMedia(`(max-width: ${BP}px)`).matches;
+              } catch(e) { return (window.innerWidth || 0) <= BP; }
+            }
+          
+            function refreshChatToggleVisibility() {
+              const toggle = document.getElementById('chatbotToggle');
+              const chat = document.getElementById('chat');
+              if (!toggle || !chat) return;
+              if (isTabletOrBelow()) {
+                toggle.style.display = (chat.classList.contains('mobile-open') ? 'none' : 'flex');
+                // ensure chat initial state for tablet
+                if (!chat.classList.contains('mobile-open') && !chat.classList.contains('mobile-hidden')) {
+                  chat.classList.add('mobile-hidden');
+                }
+              } else {
+                // on desktop, keep toggle hidden and ensure chat is not stuck in mobile classes
+                toggle.style.display = 'none';
+                chat.classList.remove('mobile-hidden','mobile-open');
+              }
+            }
+          
+            window.addEventListener('resize', debounce(refreshChatToggleVisibility, 120));
+            document.addEventListener('DOMContentLoaded', function() {
+              refreshChatToggleVisibility();
+              // also re-run after a short delay in case other scripts modify classes
+              setTimeout(refreshChatToggleVisibility, 220);
+            });
+          
+            // tiny debounce
+            function debounce(fn, t){ let id; return function(){ clearTimeout(id); id = setTimeout(fn, t); }; }
+          })();
+          </script>
+          
       
     
 
