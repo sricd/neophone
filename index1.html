@@ -1728,13 +1728,51 @@
         setupMutationAutoScroll(chat, thread);
     
         // bind close handler (idempotent)
-        if (!closeBtn.__bound) {
-          closeBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            closeChatMobile(chat, toggle);
-          });
-          closeBtn.__bound = true;
+        // Robust close handler — always attempt to close, and log for debug
+if (!closeBtn.__neophone_tablet_bound) {
+  closeBtn.addEventListener('click', function (ev) {
+    try {
+      ev.preventDefault();
+    } catch(e) {}
+    // debug: log click and important state
+    try {
+      console.log('[NEOPHONE] closeBtn clicked — isTabletOrMobile():', typeof isTabletOrMobile === 'function' ? isTabletOrMobile() : 'no-fn', 'window.innerWidth:', window.innerWidth);
+    } catch (e) {}
+
+    // force close behaviour for tablet/mobile UX
+    try {
+      if (typeof closeChatMobile === 'function') {
+        closeChatMobile();
+      } else {
+        // fallback: directly toggle classes if helper is not present
+        const chat = document.getElementById('chat');
+        const toggle = document.getElementById('chatbotToggle');
+        if (chat) {
+          chat.classList.remove('mobile-open');
+          chat.classList.add('mobile-hidden');
         }
+        if (toggle) {
+          // briefly ensure toggle shows (small async to allow transitions)
+          setTimeout(() => { try { toggle.style.display = 'flex'; } catch(e){} }, 200);
+        }
+      }
+
+      // defensive: if another script might immediately re-open, remove mobile-open after a short delay
+      setTimeout(() => {
+        const chat = document.getElementById('chat');
+        if (chat && chat.classList.contains('mobile-open')) {
+          chat.classList.remove('mobile-open');
+          chat.classList.add('mobile-hidden');
+          console.warn('[NEOPHONE] Forced mobile-open removal to prevent reopen race');
+        }
+      }, 300);
+    } catch (e) {
+      console.error('[NEOPHONE] close handler error', e);
+    }
+  });
+  closeBtn.__neophone_tablet_bound = true;
+}
+
     
         // Attach fast, debounced toggle behavior (pointerdown for mobile snappiness)
         if (!toggle.__bound) {
