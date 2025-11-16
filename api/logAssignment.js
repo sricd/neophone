@@ -24,6 +24,14 @@ async function appendRow(authClient, sheetId, rowArray) {
   });
 }
 
+function detectDeviceType(uaString = '') {
+  const ua = uaString.toLowerCase();
+
+  if (/ipad|tablet/.test(ua)) return 'tablet';
+  if (/mobile|iphone|ipod|android/.test(ua)) return 'mobile';
+  return 'desktop';
+}
+
 export default async function handler(req, res) {
   try {
     if (req.method !== 'POST') {
@@ -37,6 +45,7 @@ export default async function handler(req, res) {
     const clientId = String(data.clientId || data.clientID || '').trim();
     const ref = String(data.referrer || '').trim();
     const ua = String(data.userAgent || '').trim();
+    const deviceType = detectDeviceType(ua);
     const extra = data.extra || {};
 
     if (!pid) {
@@ -99,6 +108,7 @@ export default async function handler(req, res) {
       clientId || '',
       cond || '',
       ua || '',
+      deviceType || '',
       ref || '',
       JSON.stringify(extra || {})
     ];
