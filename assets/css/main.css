@@ -2396,3 +2396,15 @@ section.chatbox {
 
 /* Ensure the mobile toggle is below chat-close but above survey button */
 #chatbotToggle { z-index: 99990 !important; }
+
+/* FORCE HIDE CHAT ON TABLETS/IPAD WHEN close IS CLICKED */
+@media (max-width: 1024px) {
+  #chat.mobile-hidden,
+  .chatbox.mobile-hidden,
+  .chat.mobile-hidden {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+  }
+}
