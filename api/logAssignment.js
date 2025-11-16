@@ -24,6 +24,25 @@ async function appendRow(authClient, sheetId, rowArray) {
   });
 }
 
+function getISTTimestampHuman() {
+  const date = new Date();
+  const utc = date.getTime() + date.getTimezoneOffset() * 60000;
+  const ist = new Date(utc + 330 * 60000);
+
+  const day = String(ist.getDate()).padStart(2, '0');
+  const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const month = monthNames[ist.getMonth()];
+  const year = ist.getFullYear();
+
+  let hours = ist.getHours();
+  const minutes = String(ist.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+
+  return `${day} ${month} ${year}, ${hours}:${minutes} ${ampm} IST`;
+}
+
+
 function detectDeviceType(uaString = '') {
   const ua = uaString.toLowerCase();
 
@@ -101,7 +120,7 @@ export default async function handler(req, res) {
     await jwtClient.authorize();
 
     // Build row to append
-    const timestamp = new Date().toISOString();
+    const timestamp = getISTTimestampHuman();
     const row = [
       timestamp,
       pid,
