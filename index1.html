@@ -1383,47 +1383,7 @@
         // Also expose the toggle to page-level scripts that expect `const toggle = document.getElementById('chatbotToggle');`
         // (makes earlier `toggle` references valid)
       })();
-      </script>      
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-          const chat = document.getElementById("chat");
-          const toggle = document.getElementById("chatbotToggle");
-      
-          // Insert the SVG close button inside chat header
-          const header = chat.querySelector(".chat-head");
-          if (header && !header.querySelector(".chat-close")) {
-              const closeBtn = document.createElement("button");
-              closeBtn.className = "chat-close";
-              closeBtn.innerHTML = `
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                  <path d="M18.3 5.71a1 1 0 0 0-1.41 0L12 10.59 7.11 5.7A1 1 0 1 0 5.7 7.11L10.59 12l-4.89 4.89a1 1 0 1 0 1.41 1.41L12 13.41l4.89 4.89a1 1 0 0 0 1.41-1.41L13.41 12l4.89-4.89a1 1 0 0 0 0-1.4z" fill="#334155"/>
-                </svg>`;
-              header.appendChild(closeBtn);
-      
-              closeBtn.addEventListener("click", () => {
-                  chat.classList.remove("mobile-open");
-                  setTimeout(() => {
-                      chat.classList.add("mobile-hidden");
-                      toggle.style.display = "flex";
-                  }, 240);
-              });
-          }
-      
-          function isMobile() { return window.matchMedia("(max-width: 768px)").matches; }
-      
-          if (isMobile()) {
-              // Hide chat, show toggle
-              chat.classList.add("mobile-hidden");
-              toggle.style.display = "flex";
-      
-              toggle.addEventListener("click", () => {
-                  toggle.style.display = "none";
-                  chat.classList.remove("mobile-hidden");
-                  chat.classList.add("mobile-open");
-              });
-          }
-      });
-      </script>      
+      </script>           
    <script>
     const FORM_B_BASE = 'https://docs.google.com/forms/d/e/1FAIpQLSds7flsKib_OB0r_rQRS4eBIWJzwZFTTpfC1S6-pijuo8AY7Q/viewform?usp=pp_url&';
     const ENTRY_COND = 'entry.204407772';
