@@ -1708,6 +1708,10 @@
           if (!closeBtn.__bound) {
             closeBtn.addEventListener('click', function (e) {
               e.preventDefault();
+                          // Only allow close behavior on mobile
+              if (!window.matchMedia(`(max-width:${MOBILE_BREAKPOINT}px)`).matches) {
+                return; // desktop: do nothing
+              }
               closeChatMobile(chat, toggle);
             });
             closeBtn.__bound = true;
