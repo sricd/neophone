@@ -2397,14 +2397,47 @@ section.chatbox {
 /* Ensure the mobile toggle is below chat-close but above survey button */
 #chatbotToggle { z-index: 99990 !important; }
 
-/* FORCE HIDE CHAT ON TABLETS/IPAD WHEN close IS CLICKED */
+/* ===== NeoPhone: force-hide and toggle-visibility for tablet/iPad =====
+   Append this at the very end of main.css
+*/
+#chat.mobile-hidden,
+.chatbox.mobile-hidden,
+.chat.mobile-hidden,
+.chat-root.mobile-hidden,
+[data-chat-root].mobile-hidden {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Ensure toggle is visible on tablet / iPad */
 @media (max-width: 1024px) {
-  #chat.mobile-hidden,
-  .chatbox.mobile-hidden,
-  .chat.mobile-hidden {
-      display: none !important;
-      visibility: hidden !important;
-      opacity: 0 !important;
-      pointer-events: none !important;
+  #chatbotToggle,
+  .chat-toggle-bubble {
+    display: flex !important;
+    z-index: 99999 !important;
+    position: fixed !important;
+    right: 18px !important;
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* If chat is open, keep toggle hidden */
+  #chat.mobile-open,
+  .chatbox.mobile-open,
+  .chat.mobile-open,
+  .chat-root.mobile-open,
+  [data-chat-root].mobile-open {
+    /* allow JS to control visibility; keep defaults here */
   }
 }
+
+/* Extra safety for very stubborn CSS that may re-show chat */
+#chat,
+.chatbox,
+.chat,
+.chat-root,
+[data-chat-root] {
+  transition: opacity .18s ease, transform .18s ease;
+}
+

@@ -23,7 +23,7 @@
 
   <script>
     /* start.html — client-side assignment persistence + robust logging */
-    const nConditions = 8;
+    const CONDITIONS = [1,2];
     const conditionPrefix = 'https://neophone.in/condition';
     const LOG_ENDPOINT = '/api/logAssignment';
     
@@ -100,7 +100,7 @@
       }
     
       // otherwise create a new assignment
-      const n = Math.floor(Math.random()*nConditions) + 1;
+      const n = CONDITIONS[Math.floor(Math.random()*CONDITIONS.length)];
       const participantID = genParticipantID();
       const clientId = genClientId();
     
