@@ -1616,6 +1616,10 @@
       }
     
       function closeChatMobile(chat, toggle) {
+        if (!window.matchMedia(`(max-width:${MOBILE_BREAKPOINT}px)`).matches) {
+        return;
+        }
+
         chat.classList.remove('mobile-open');
         // hide after animation
         setTimeout(() => {
