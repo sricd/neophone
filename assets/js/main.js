@@ -179,3 +179,75 @@
 
 })();
 
+// ===== Mobile toggle open/close fix (simple & safe) =====
+(function () {
+
+  const MOBILE_BP = 768;
+
+  function isMobile() {
+    return window.matchMedia(`(max-width:${MOBILE_BP}px)`).matches;
+  }
+
+  function getChat() {
+    return document.getElementById('chat');
+  }
+
+  function getToggle() {
+    return document.getElementById('chatbotToggle');
+  }
+
+  function openChatMobile() {
+    const chat = getChat();
+    const toggle = getToggle();
+    if (!chat) return;
+
+    chat.classList.remove('mobile-hidden');
+    chat.classList.add('mobile-open');
+
+    chat.style.removeProperty('display');
+    chat.style.removeProperty('visibility');
+    chat.style.removeProperty('opacity');
+    chat.style.pointerEvents = 'auto';
+
+    if (toggle) toggle.style.display = 'none';
+  }
+
+  function closeChatMobile() {
+    if (!isMobile()) return;
+
+    const chat = getChat();
+    const toggle = getToggle();
+    if (!chat) return;
+
+    chat.classList.remove('mobile-open');
+    chat.classList.add('mobile-hidden');
+
+    chat.style.visibility = 'hidden';
+    chat.style.opacity = '0';
+    chat.style.pointerEvents = 'none';
+
+    if (toggle) toggle.style.display = 'flex';
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+
+    const toggle = getToggle();
+    const closeBtn = document.querySelector('.chat-close');
+
+    if (toggle) {
+      toggle.onclick = function (e) {
+        e.preventDefault();
+        openChatMobile();
+      };
+    }
+
+    if (closeBtn) {
+      closeBtn.onclick = function (e) {
+        e.preventDefault();
+        closeChatMobile();
+      };
+    }
+
+  });
+
+})();
