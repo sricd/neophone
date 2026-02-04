@@ -2441,3 +2441,16 @@ section.chatbox {
   transition: opacity .18s ease, transform .18s ease;
 }
 
+/* Hide close button on desktop */
+.chat-close {
+  display: none;
+}
+
+/* Show only on mobile */
+@media (max-width: 768px) {
+  .chat-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
