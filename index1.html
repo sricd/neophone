@@ -1385,7 +1385,7 @@
       })();
       </script>           
    <script>
-    const FORM_B_BASE = 'https://docs.google.com/forms/d/e/1FAIpQLScsjx0CotfFr1u3AMxMMnIC18YKomVOLitq8n8zyzOUgt4D5Q/viewform?usp=pp_url&';
+    const FORM_B_BASE = 'https://docs.google.com/forms/d/e/1FAIpQLScsjx0CotfFr1u3AMxMMnIC18YKomVOLitq8n8zyzOUgt4D5Q/viewform?usp=pp_url';
     const ENTRY_COND = 'entry.1840303165';
     const ENTRY_PID = 'entry.639124837';
   
@@ -1393,12 +1393,12 @@
   
     // HARD-CODE the correct condition number per page
     const conditionNum = '1'; 
-    const participantID = getQS('participantID');
+    const participantID = localStorage.getItem('neo_assignment') ? JSON.parse(localStorage.getItem('neo_assignment')).participantID : '';
   
     const parts = [];
     if (participantID) parts.push(`${ENTRY_PID}=${encodeURIComponent(participantID)}`);
     if (conditionNum) parts.push(`${ENTRY_COND}=${encodeURIComponent(conditionNum)}`);
-    const prefillUrl = FORM_B_BASE + parts.join('&');
+    const prefillUrl = FORM_B_BASE + '&' + parts.join('&');
   
     const btn = document.createElement('a');
     btn.className = 'survey-btn';
